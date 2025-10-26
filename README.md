@@ -45,5 +45,6 @@ It automatically calculates who owes whom and by how much, making expense manage
 
 ### **Compile:**
 ```bash
-gcc -std=c11 -O2 -Wall expense_splitter.c -o splitter
+gcc -std=c11 -O2 -Wall DS_miniproject.c -o DS_miniproject
+
 
