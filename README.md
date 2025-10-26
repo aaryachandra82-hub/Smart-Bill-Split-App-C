@@ -1,4 +1,4 @@
-# 💰 Smart Bill Split (Expense Splitter in C)
+# 💰 Smart Bill Splitter (Expense Splitter in C)
 
 A simple **C program** that helps groups of friends easily **split expenses**, **track balances**, and **settle debts** with minimal transactions.
 
