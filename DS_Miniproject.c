@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,7 +7,8 @@
 
 typedef struct {
     char name[NAME_LEN];
-    double net;
+    double net; // positive => others owe them; negative => they owe others
+} Friend;
 
 typedef struct {
     Friend *arr;
@@ -105,28 +104,29 @@ void add_expense(FriendList *fl) {
         }
     }
 
-
+    // compute share (equal split)
     double share = amount / num_participants;
 
-
+    // Update nets: payer receives amount - their share; participants owe share
+    // Simpler method: add (amount) to payer, then subtract share from everyone in participants
     fl->arr[payer_idx].net += amount;
     for (int i = 0; i < num_participants; ++i) {
         int idx = participants[i];
         fl->arr[idx].net -= share;
     }
 
-
+    // Net result: payer net increases by amount - their share (since they were in participants too)
     printf("Expense added: %s paid %.2f split among %d participant(s) (each %.2f).\n",
            fl->arr[payer_idx].name, amount, num_participants, share);
 
     free(participants);
 }
 
-
+// Greedy settle: repeatedly match largest creditor with largest debtor.
 void settle_debts(FriendList *fl) {
     if (fl->count == 0) { printf("No friends.\n"); return; }
 
-
+    // Build arrays of indexes and nets
     int n = fl->count;
     double *nets = malloc(sizeof(double) * n);
     int *idxs = malloc(sizeof(int) * n);
@@ -135,28 +135,28 @@ void settle_debts(FriendList *fl) {
         idxs[i] = i;
     }
 
-
-    const double EPS = 0.005;
+    // small epsilon for floating comparisons
+    const double EPS = 0.005; // half-rupee approx tolerance
 
     printf("Suggested settlement transactions (minimised by greedy matching):\n");
     int steps = 0;
     while (1) {
-
+        // find max creditor (max positive) and max debtor (most negative)
         int cred = -1, debt = -1;
         double maxCredit = EPS, maxDebt = -EPS;
         for (int i = 0; i < n; ++i) {
             if (nets[i] > maxCredit) { maxCredit = nets[i]; cred = i; }
             if (nets[i] < maxDebt) { maxDebt = nets[i]; debt = i; }
         }
-        if (cred == -1 || debt == -1) break;
+        if (cred == -1 || debt == -1) break; // done
 
         double settle = (maxCredit < -maxDebt) ? maxCredit : -maxDebt;
-
+        // creditor receives 'settle' from debtor
         printf("  %s receives %.2f from %s\n", fl->arr[idxs[cred]].name, settle, fl->arr[idxs[debt]].name);
         nets[cred] -= settle;
         nets[debt] += settle;
         steps++;
-        if (steps > 10000) break;
+        if (steps > 10000) break; // safety
     }
 
     if (steps == 0) printf("  All settled. No one owes anything.\n");
@@ -180,16 +180,20 @@ int main(void) {
     FriendList fl;
     init_list(&fl);
 
+    // Simple demo prefill (uncomment if you want defaults)
+    // add_friend(&fl, "A");
+    // add_friend(&fl, "B");
+    // add_friend(&fl, "C");
 
     int choice = 0;
     while (1) {
         prompt_menu();
-        if (scanf("%d", &choice) != 1) {
+        if (scanf("%d", &choice) != 1) { // flush and continue on bad input
             while (getchar() != '\n');
             printf("Invalid input.\n");
             continue;
         }
-        while (getchar() != '\n');
+        while (getchar() != '\n'); // clear rest of line
 
         if (choice == 1) {
             char name[NAME_LEN];
